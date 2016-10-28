@@ -18,6 +18,7 @@ public:
     ~Ring();
 
     Vector4f GetPosition() const;
+    Vector4f GetForward() const;
     float GetRadius() const;
 
     float DistanceToBallSquared( Ball* ball );

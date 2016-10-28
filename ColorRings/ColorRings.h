@@ -19,18 +19,23 @@
 void color_rings_assert( const char* file, size_t line, const char* msg, ... );
 void color_rings_printf( const char* msg, ... );
 
+long color_rings_time();
+
+void color_rings_random_seed( int seed );
 int color_rings_random_int( int min, int max );
 float color_rings_random_float( float min, float max );
 
 float color_rings_sqrt( float a );
+float color_rings_sin( float a );
+float color_rings_cos( float a );
 
 int color_rings_getchar();
 
 enum
 {
-    COLOR_RING_MAX_BALLS_PER_RING = 32,
-    COLOR_RING_MAX_RINGS = 64,
-    COLOR_RING_MAX_BALLS = 128
+    COLOR_RING_MAX_BALLS_PER_RING = 64,
+    COLOR_RING_MAX_RINGS = 128,
+    COLOR_RING_MAX_BALLS = 256
 };
 
 #include "Math.h"

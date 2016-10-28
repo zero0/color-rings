@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include <stdarg.h>
+#include <time.h>
 
 void color_rings_assert( const char* file, size_t line, const char* msg, ... )
 {
@@ -34,6 +35,19 @@ void color_rings_printf( const char* msg, ... )
     va_end( vl );
 }
 
+long color_rings_time()
+{
+    time_t t;
+    time( &t );
+    
+    return (long)t;
+}
+
+void color_rings_random_seed( int seed )
+{
+    srand( seed );
+}
+
 int color_rings_random_int( int min, int max )
 {
     int r = rand();
@@ -48,6 +62,15 @@ float color_rings_random_float( float min, float max )
 float color_rings_sqrt( float a )
 {
     return sqrtf( a );
+}
+
+float color_rings_sin( float a )
+{
+    return sinf( a );
+}
+float color_rings_cos( float a )
+{
+    return cosf( a );
 }
 
 int color_rings_getchar()

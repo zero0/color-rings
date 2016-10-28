@@ -21,9 +21,6 @@ enum PlayerCollectionOrder
     PlayerCollectionOrder_Count
 };
 
-typedef void ( *PlayerStateFunc )( float dt );
-typedef int( *ColorSorterFunc )( Color4 a, Color4 b );
-
 class Player
 {
 public:
@@ -35,6 +32,7 @@ public:
     int GetScore() const;
 
     float GetRadius() const;
+    void SetRadius( float r );
 
     Vector4f GetPosition() const;
     void SetPosition( Vector4f position );
@@ -54,11 +52,9 @@ private:
 
     Vector4f m_position;
     Vector4f m_forward;
-    Vector4f m_up;
     float m_radius;
 
     PlayerState m_state;
-    PlayerStateFunc m_states[ PlayerState_Count ];
 
     PlayerCollectionOrder m_colorOrder;
 

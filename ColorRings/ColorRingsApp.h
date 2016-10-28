@@ -22,6 +22,10 @@ private:
     Ring m_rings[ COLOR_RING_MAX_RINGS ];
     Ball m_balls[ COLOR_RING_MAX_BALLS ];
 
+    // board size
+    Vector4f m_boardMin;
+    Vector4f m_boardMax;
+
     size_t m_numBalls;
     size_t m_numRings;
 

@@ -1,22 +1,5 @@
 #include "ColorRings.h"
 
-int DefaultColorSorter( Color4 a, Color4 b )
-{
-    // sort blue first
-    int cmp = a.b > b.b ? -1 : a.b < b.b ? 1 : 0;
-    if( cmp == 0 )
-    {
-        // then by red
-        cmp = a.r > b.r ? -1 : a.r < b.r ? 1 : 0;
-        if( cmp == 0 )
-        {
-            // then by green
-            cmp = a.g > b.g ? -1 : a.g < b.g ? 1 : 0;
-        }
-    }
-    return cmp;
-}
-
 Player::Player()
     : m_radius( 2.0f )
     , m_state( PlayerState::Idle )
@@ -37,7 +20,6 @@ float Player::DistanceToRingSquared( const Ring& ring ) const
     return dist;
 }
 
-
 int Player::GetScore() const
 {
     return m_score;
@@ -47,6 +29,10 @@ float Player::GetRadius() const
 {
     return m_radius;
 }
+void Player::SetRadius( float r )
+{
+    m_radius = r;
+}
 
 Vector4f Player::GetPosition() const
 {
@@ -55,6 +41,7 @@ Vector4f Player::GetPosition() const
 void Player::SetPosition( Vector4f position )
 {
     m_position = position;
+    color_rings_printf( "Player Moved to [%f %f %f]", m_position.x, m_position.y, m_position.z );
 }
 
 Vector4f Player::GetForward() const
@@ -89,17 +76,19 @@ void Player::Update( float dt )
             CollectingState( dt );
             break;
         default:
+            COLOR_RINGS_ASSERT( false, "Unknown PlayerState" );
             break;
     }
 }
 
 void Player::IdleState( float dt )
 {
-
+    // TODO: implement idle state logic
 }
 
 void Player::CollectingState( float dt )
 {
+    // colors to find in order
     static const Color4 orderedColors[] = {
         { 0, 0, 255, 255 }, // blue
         { 255, 0, 0, 255 }, // red
@@ -114,6 +103,7 @@ void Player::CollectingState( float dt )
     size_t index = 0;
     size_t imax = m_currentRing->GetNumBalls();
 
+    // find the current ordered color in the ring
     for( size_t i = 0; i != imax; ++i )
     {
         const Ball* b = m_currentRing->GetBall( i );
@@ -132,30 +122,49 @@ void Player::CollectingState( float dt )
         }
     }
 
+    // if there were no balls of the current color, or a ball was found, move to the next color
     if( numBallsOfCurrentColor == 0 || ball != nullptr )
     {
         m_colorOrder = (PlayerCollectionOrder)( ( m_colorOrder + 1 ) % PlayerCollectionOrder_Count );
     }
 
+    // if a ball was found, collect ball and move player
     if( ball != nullptr )
     {
         color_rings_printf( "Collected Ball! [%X %X %X]", ball->color.r, ball->color.g, ball->color.b );
         
+        // collect ball
         m_collectedBalls[ m_numCollectedBalls ] = ball;
         ++m_numCollectedBalls;
 
+        // remove ball from ring since it was collected
         m_currentRing->RemoveBall( index );
 
+        // if there are no more balls in the ring, score point
         if( m_currentRing->GetNumBalls() == 0 )
         {
+            // score a point
             ++m_score;
             color_rings_printf( "Point Scored! %d", m_score );
 
-            // TODO: move player
+            // determine the angle to move
+            float deg = color_rings_random_float( -15.0f, 15.0f );
+            deg = Math::WrapAngleDeg( deg );
+            float rad = Math::DegToRad( deg );
+
+            // rotate forward vector by angle
+            Vector4f fwd = m_currentRing->GetForward();
+            fwd = Math::RotateY( fwd, rad );
+            fwd = Math::Scale( fwd, COLOR_RINGS_METERS( 5 ) );
+
+            // get new position for player based on current ring's position and forward
+            Vector4f newPos = Math::Add( m_currentRing->GetPosition(), fwd );
+            SetPosition( newPos );
+            SetForward( fwd );
         }
     }
-
-    // clean up
+    
+    // clean up and return to idle
     m_currentRing = nullptr;
 
     m_state = PlayerState::Idle;

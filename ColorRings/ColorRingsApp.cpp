@@ -6,41 +6,60 @@ ColorRingsApp::ColorRingsApp()
     , m_isRunning( false )
     , m_returnCode( 0 )
 {
-
 }
 ColorRingsApp::~ColorRingsApp()
 {
-
 }
 
 void ColorRingsApp::Init()
 {
-    m_player.SetPosition( Math::Vector4( 0, 0, 0, 1 ) );
-    
-    Vector4f min = Math::Vector4( -10, 0, -10, 1 );
-    Vector4f max = Math::Vector4(  10, 0,  10, 1 );
+    // seed random with time
+    long t = color_rings_time();
+    color_rings_random_seed( (int)t );
 
-    // TODO: remove when testing complete
-    size_t numRings = 3; // color_rings_random_int( 10, 25 );
+    // board size
+    m_boardMin = Math::Vector4( -20, 0, -20, 1 );
+    m_boardMax = Math::Vector4(  20, 0,  20, 1 );
+
+    // set player position
+    float x = color_rings_random_float( m_boardMin.x, m_boardMax.x );
+    float y = color_rings_random_float( m_boardMin.y, m_boardMax.y );
+    float z = color_rings_random_float( m_boardMin.z, m_boardMax.z );
+
+    m_player.SetPosition( Math::Vector4( x, y, z, 1 ) );
+    m_player.SetForward( Math::Vector4( 1, 0, 0, 0 ) );
+    m_player.SetRadius( 5.0f );
+
+    // add rings
+    size_t numRings = color_rings_random_int( 10, COLOR_RING_MAX_RINGS );
     color_rings_printf( "Spawning %d Rings", numRings );
 
     for( size_t i = 0; i != numRings; ++i )
     {
-        float x = color_rings_random_float( min.x, max.x );
-        float y = color_rings_random_float( min.y, max.y );
-        float z = color_rings_random_float( min.z, max.z );
+        x = color_rings_random_float( m_boardMin.x, m_boardMax.x );
+        y = color_rings_random_float( m_boardMin.y, m_boardMax.y );
+        z = color_rings_random_float( m_boardMin.z, m_boardMax.z );
+        Vector4f pos = Math::Vector4( x, y, z, 1 );
 
-        AddRing( Math::Vector4( x, y, z, 1 ), Math::Vector4( 1, 0, 0, 0 ), 10.0f );
+        x = color_rings_random_float( -1.0f, 1.0f );
+        y = 0.0f;
+        z = color_rings_random_float( -1.0f, 1.0f );
+        Vector4f fwd = Math::Vector4( x, y, z, 0 );
+        fwd = Math::Normalize3( fwd );
+
+        AddRing( pos, fwd, 10.0f );
     }
 
-    size_t numBalls = 10; // (size_t)color_rings_random_int( 5, 15 );
+    // add balls
+    size_t numBalls = color_rings_random_int( 30, COLOR_RING_MAX_BALLS );
     color_rings_printf( "Spawning %d Balls", numBalls );
     
     for( size_t i = 0; i != numBalls; ++i )
     {
-        float x = color_rings_random_float( min.x, max.x );
-        float y = color_rings_random_float( min.y, max.y );
-        float z = color_rings_random_float( min.z, max.z );
+        x = color_rings_random_float( m_boardMin.x, m_boardMax.x );
+        y = color_rings_random_float( m_boardMin.y, m_boardMax.y );
+        z = color_rings_random_float( m_boardMin.z, m_boardMax.z );
+        Vector4f pos = Math::Vector4( x, y, z, 1 );
 
         int r = color_rings_random_int( 0, 3 );
         Color4 c;
@@ -49,7 +68,7 @@ void ColorRingsApp::Init()
         c.b = r == 2 ? 255 : 0;
         c.a = 255;
 
-        AddBall( Math::Vector4( x, y, z, 1 ), c, 1.0f  );
+        AddBall( pos, c, 1.0f  );
     }
 
     // foreach ball, add it to the closest ring
@@ -60,6 +79,7 @@ void ColorRingsApp::Init()
         float distSqr = 100000.0f;
         Ring* ring = nullptr;
 
+        // find the closest ring to the ball
         for( size_t j = 0; j != m_numRings; ++j )
         {
             Ring* r = &m_rings[ j ];
@@ -71,7 +91,8 @@ void ColorRingsApp::Init()
             }
         }
 
-        COLOR_RINGS_ASSERT( ring, "Unable to find close ring for ball" );
+        // add ball to ring
+        COLOR_RINGS_ASSERT( ring, "Unable to find a close ring for ball" );
         ring->AddBall( b );
     }
 }
@@ -87,11 +108,12 @@ void ColorRingsApp::Tick()
         float distSqr = 100000.0f;
         Ring* ring = nullptr;
 
-        size_t numRingsNearPlayer = 0;
+        // find the closes ring with balls to the player
         for( size_t i = 0; i != m_numRings; ++i )
         {
             Ring& r = m_rings[ i ];
             float d = m_player.DistanceToRingSquared( r );
+
             if( d < distSqr )
             {
                 ring = &r;
@@ -99,21 +121,61 @@ void ColorRingsApp::Tick()
             }
         }
 
-        if( ring )
+        // if a ring with balls was found, collect balls from the ring
+        if( ring != nullptr && ring->GetNumBalls() != 0 )
         {
             m_player.CollectBallsFromRing( ring );
         }
+        // otherwise, move the player forward as if the user made them move
+        else
+        {
+            m_player.TranslateForward( COLOR_RINGS_METERS( 2 ) );
+        }
 
+        // update the player
         m_player.Update( dt );
 
+        // fail safe to move the player back inside the board if they move outside
+        bool playerOutsideBoard = false;
+        Vector4f playerPos = m_player.GetPosition();
+        if( playerPos.x < m_boardMin.x )
+        {
+            playerOutsideBoard = true;
+            playerPos.x += m_boardMax.x - m_boardMin.x;
+        }
+        if( playerPos.x > m_boardMax.x )
+        {
+            playerOutsideBoard = true;
+            playerPos.x -= m_boardMax.x - m_boardMin.x;
+        }
+        if( playerPos.z < m_boardMin.z )
+        {
+            playerOutsideBoard = true;
+            playerPos.z += m_boardMax.z - m_boardMin.z;
+        }
+        if( playerPos.z > m_boardMax.z )
+        {
+            playerOutsideBoard = true;
+            playerPos.z -= m_boardMax.z - m_boardMin.z;
+        }
+
+        // if the player fell outside the board, put them back
+        if( playerOutsideBoard )
+        {
+            m_player.SetPosition( playerPos );
+        }
+
+        // find the total balls not collected
         size_t totalBalls = 0;
         for( size_t i = 0; i != m_numRings; ++i )
         {
             totalBalls += m_rings[ i ].GetNumBalls();
         }
 
+        // if there are no more balls, exit loop
         if( totalBalls == 0 )
         {
+            color_rings_printf( "All Balls Collected! (Press any key to exit)" );
             m_isRunning = false;
         }
     }
@@ -127,21 +189,27 @@ int ColorRingsApp::Shutdown()
 void ColorRingsApp::AddRing( Vector4f position, Vector4f forward, float radius )
 {
     COLOR_RINGS_ASSERT( m_numRings != COLOR_RING_MAX_RINGS, "Max rings reached" );
+    color_rings_printf( "Ring Added at [%f %f %f]", position.x, position.y, position.z );
 
+    // setup new ring
     Ring& ring = m_rings[ m_numRings ];
     ring.Setup( position, forward, radius );
 
+    // increment rings
     ++m_numRings;
 }
 
 void ColorRingsApp::AddBall( Vector4f position, Color4 color, float radius )
 {
     COLOR_RINGS_ASSERT( m_numBalls != COLOR_RING_MAX_BALLS, "Max balls reached" );
+    color_rings_printf( "Ball [%X %X %X] Added at [%f %f %f]", color.r, color.g, color.b, position.x, position.y, position.z );
 
+    // store ball values
     Ball& ball = m_balls[ m_numBalls ];
     ball.position = position;
     ball.radius = radius;
     ball.color = color;
 
+    // increment balls
     ++m_numBalls;
 }

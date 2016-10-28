@@ -13,6 +13,11 @@ Vector4f Ring::GetPosition() const
     return m_position;
 }
 
+Vector4f Ring::GetForward() const
+{
+    return m_forward;
+}
+
 float Ring::GetRadius() const
 {
     return m_radius;
@@ -37,13 +42,14 @@ void Ring::AddBall( Ball* ball )
     COLOR_RINGS_ASSERT( m_numBalls != COLOR_RING_MAX_BALLS_PER_RING, "Max balls reached" );
     
     m_ownedBalls[ m_numBalls ] = ball;
-
     ++m_numBalls;
 }
 
 void Ring::RemoveBall( size_t index )
 {
     COLOR_RINGS_ASSERT( index < m_numBalls, "Index out of range" );
+    COLOR_RINGS_ASSERT( m_numBalls > 0, "No Balls to remove" );
+
     --m_numBalls;
     m_ownedBalls[ index ] = m_ownedBalls[ m_numBalls ];
 }
