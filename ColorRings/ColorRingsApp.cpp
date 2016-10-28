@@ -175,7 +175,7 @@ void ColorRingsApp::Tick()
         // if there are no more balls, exit loop
         if( totalBalls == 0 )
         {
-            color_rings_printf( "All Balls Collected! (Press any key to exit)" );
+            color_rings_printf( "All Balls Collected! (Press Enter to exit)" );
             m_isRunning = false;
         }
     }
