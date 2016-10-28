@@ -147,6 +147,9 @@ void Player::CollectingState( float dt )
             ++m_score;
             color_rings_printf( "Point Scored! %d", m_score );
 
+            // reset order back to blue when scoring
+            m_colorOrder = PlayerCollectionOrder::Blue;
+
             // determine the angle to move
             float deg = color_rings_random_float( -15.0f, 15.0f );
             deg = Math::WrapAngleDeg( deg );
