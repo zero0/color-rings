@@ -151,7 +151,7 @@ void Player::CollectingState( float dt )
             ++m_score;
             color_rings_printf( "Point Scored! %d", m_score );
 
-
+            // TODO: move player
         }
     }
 
