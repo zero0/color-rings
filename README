@@ -1,0 +1,12 @@
+A player is moving a character through a world populated with a number of hoops. Around each hoop are a random number of colored balls. You are given the hoop positions and ball color and positions in an unsorted list, intermixed with other data. Assume the number of hoops and balls is fixed when the map is exported.
+ 
+When the player reaches a hoop, they must gather all of the balls that are closest to that hoop, in order of color. So they’ll find a blue ball, then a red ball, then a green ball, etc. Once the player finds the last color, they should start over with a blue ball until all the remaining balls are closer to a different hoop. If there are no more balls of a specific color around the current hoop, but there are still balls of other colors, the player should just skip that color.
+ 
+When all the balls have been gathered in the correct color order, the player may score a point by moving the character to within 5 meters of the hoop and 30 degrees of the hoop's forward vector.
+ 
+Implement all algorithms and data structures necessary to determine which ball the player should currently be collecting and track which balls the player has collected. Also track the player's score. Assume that your code will get an Init() call, a Shutdown() call and a Tick() call which includes the frame time. You can also obtain the character's position and orientation via simple function calls.
+ 
+Write all code in C or C++. You may use external libraries where needed (e.g. clib, XNAMath); just let us know which ones you're using. Keep memory allocations to an absolute minimum, and if possible do no dynamic allocations in your Tick() handler. You can preprocess the data as you see fit.
+Send us your solution within 24 hours from the time it was sent to you. Please let us know right away if you will be unable to complete the test within that time frame.
+Finally, you are welcome to ask as many clarifying questions as you feel necessary. We'll do our best to get answers to you as quickly as possible, but reply time will not change the delivery deadline.
+Good luck!
