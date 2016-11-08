@@ -11,13 +11,15 @@ public:
     ~ColorRingsApp();
 
     void Init();
-    void Tick();
+    void Process();
     int Shutdown();
 
     void AddRing( Vector4f position, Vector4f forward, float radius );
     void AddBall( Vector4f position, Color4 color, float radius );
 
 private:
+    void Tick( float dt );
+
     Player m_player;
     Ring m_rings[ COLOR_RING_MAX_RINGS ];
     Ball m_balls[ COLOR_RING_MAX_BALLS ];

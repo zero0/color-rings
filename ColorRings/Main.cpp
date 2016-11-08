@@ -6,7 +6,7 @@ int main( const char** args )
 
     ColorRingsApp app;
     app.Init();
-    app.Tick();
+    app.Process();
     ret = app.Shutdown();
 
     color_rings_getchar();

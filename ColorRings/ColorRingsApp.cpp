@@ -95,89 +95,19 @@ void ColorRingsApp::Init()
         COLOR_RINGS_ASSERT( ring, "Unable to find a close ring for ball" );
         ring->AddBall( b );
     }
+
+    // start running
+    m_isRunning = true;
 }
 
-void ColorRingsApp::Tick()
+void ColorRingsApp::Process()
 {
-    m_isRunning = true;
-
     while( m_isRunning )
     {
+        // TODO: use real timing, for now assume 60fps
         float dt = 1.0f / 60.0f;
 
-        float distSqr = 100000.0f;
-        Ring* ring = nullptr;
-
-        // find the closes ring with balls to the player
-        for( size_t i = 0; i != m_numRings; ++i )
-        {
-            Ring& r = m_rings[ i ];
-            float d = m_player.DistanceToRingSquared( r );
-
-            if( d < distSqr )
-            {
-                ring = &r;
-                distSqr = d;
-            }
-        }
-
-        // if a ring with balls was found, collect balls from the ring
-        if( ring != nullptr && ring->GetNumBalls() != 0 )
-        {
-            m_player.CollectBallsFromRing( ring );
-        }
-        // otherwise, move the player forward as if the user made them move
-        else
-        {
-            m_player.TranslateForward( COLOR_RINGS_METERS( 2 ) );
-        }
-
-        // update the player
-        m_player.Update( dt );
-
-        // fail safe to move the player back inside the board if they move outside
-        bool playerOutsideBoard = false;
-        Vector4f playerPos = m_player.GetPosition();
-        if( playerPos.x < m_boardMin.x )
-        {
-            playerOutsideBoard = true;
-            playerPos.x += m_boardMax.x - m_boardMin.x;
-        }
-        if( playerPos.x > m_boardMax.x )
-        {
-            playerOutsideBoard = true;
-            playerPos.x -= m_boardMax.x - m_boardMin.x;
-        }
-        if( playerPos.z < m_boardMin.z )
-        {
-            playerOutsideBoard = true;
-            playerPos.z += m_boardMax.z - m_boardMin.z;
-        }
-        if( playerPos.z > m_boardMax.z )
-        {
-            playerOutsideBoard = true;
-            playerPos.z -= m_boardMax.z - m_boardMin.z;
-        }
-
-        // if the player fell outside the board, put them back
-        if( playerOutsideBoard )
-        {
-            m_player.SetPosition( playerPos );
-        }
-
-        // find the total balls not collected
-        size_t totalBalls = 0;
-        for( size_t i = 0; i != m_numRings; ++i )
-        {
-            totalBalls += m_rings[ i ].GetNumBalls();
-        }
-
-        // if there are no more balls, exit loop
-        if( totalBalls == 0 )
-        {
-            color_rings_printf( "All Balls Collected! (Press Enter to exit)" );
-            m_isRunning = false;
-        }
+        Tick( dt );
     }
 }
 
@@ -212,4 +142,82 @@ void ColorRingsApp::AddBall( Vector4f position, Color4 color, float radius )
 
     // increment balls
     ++m_numBalls;
+}
+
+
+void ColorRingsApp::Tick( float dt )
+{
+    float distSqr = 100000.0f;
+    Ring* ring = nullptr;
+
+    // find the closes ring with balls to the player
+    for( size_t i = 0; i != m_numRings; ++i )
+    {
+        Ring& r = m_rings[ i ];
+        float d = m_player.DistanceToRingSquared( r );
+
+        if( d < distSqr )
+        {
+            ring = &r;
+            distSqr = d;
+        }
+    }
+
+    // if a ring with balls was found, collect balls from the ring
+    if( ring != nullptr && ring->GetNumBalls() != 0 )
+    {
+        m_player.CollectBallsFromRing( ring );
+    }
+    // otherwise, move the player forward as if the user made them move
+    else
+    {
+        m_player.TranslateForward( COLOR_RINGS_METERS( 2 ) );
+    }
+
+    // update the player
+    m_player.Update( dt );
+
+    // fail safe to move the player back inside the board if they move outside
+    bool playerOutsideBoard = false;
+    Vector4f playerPos = m_player.GetPosition();
+    if( playerPos.x < m_boardMin.x )
+    {
+        playerOutsideBoard = true;
+        playerPos.x += m_boardMax.x - m_boardMin.x;
+    }
+    if( playerPos.x > m_boardMax.x )
+    {
+        playerOutsideBoard = true;
+        playerPos.x -= m_boardMax.x - m_boardMin.x;
+    }
+    if( playerPos.z < m_boardMin.z )
+    {
+        playerOutsideBoard = true;
+        playerPos.z += m_boardMax.z - m_boardMin.z;
+    }
+    if( playerPos.z > m_boardMax.z )
+    {
+        playerOutsideBoard = true;
+        playerPos.z -= m_boardMax.z - m_boardMin.z;
+    }
+
+    // if the player fell outside the board, put them back
+    if( playerOutsideBoard )
+    {
+        m_player.SetPosition( playerPos );
+    }
+
+    // find the total balls not collected
+    size_t totalBalls = 0;
+    for( size_t i = 0; i != m_numRings; ++i )
+    {
+        totalBalls += m_rings[ i ].GetNumBalls();
+    }
+
+    // if there are no more balls, exit loop
+    if( totalBalls == 0 )
+    {
+        color_rings_printf( "All Balls Collected! (Press Enter to exit)" );
+        m_isRunning = false;
+    }
 }
