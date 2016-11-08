@@ -163,6 +163,24 @@ void ColorRingsApp::Tick( float dt )
         }
     }
 
+    // if a ring is in range, check that the player is in front of the ring to collect
+    if( ring != nullptr )
+    {
+        // vector from the ring to the player
+        Vector4f v = Math::Sub( m_player.GetPosition(), ring->GetPosition() );
+        v = Math::Normalize3( v );
+
+        // calculate the zone of colletion (15 deg in front of the ring)
+        float zoneOfCollection = 1.0f - Math::DegToRad( 15.0f );
+        float angleBetween = Math::Dot3( v, ring->GetForward() );
+
+        // if the player is not in the zone of collections, clear the ring since it can't be used
+        if( angleBetween < zoneOfCollection )
+        {
+            ring = nullptr;
+        }
+    }
+
     // if a ring with balls was found, collect balls from the ring
     if( ring != nullptr && ring->GetNumBalls() != 0 )
     {
