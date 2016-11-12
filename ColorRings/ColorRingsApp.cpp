@@ -27,7 +27,7 @@ void ColorRingsApp::Init()
     float z = color_rings_random_float( m_boardMin.z, m_boardMax.z );
 
     m_player.SetPosition( Math::Vector4( x, y, z, 1 ) );
-    m_player.SetForward( Math::Vector4( 1, 0, 0, 0 ) );
+    m_player.SetForward( Math::Normalize3( Math::Vector4( x, y, z, 0 ) ) );
     m_player.SetRadius( 5.0f );
 
     // add rings
@@ -171,7 +171,7 @@ void ColorRingsApp::Tick( float dt )
         v = Math::Normalize3( v );
 
         // calculate the zone of colletion (15 deg in front of the ring)
-        float zoneOfCollection = 1.0f - Math::DegToRad( 15.0f );
+        float zoneOfCollection = color_rings_cos( Math::DegToRad( 15.0f ) );
         float angleBetween = Math::Dot3( v, ring->GetForward() );
 
         // if the player is not in the zone of collections, clear the ring since it can't be used
